@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	configLib "github.com/rizwijaya/miniWallet/infrastructures/config"
 	log "github.com/rizwijaya/miniWallet/infrastructures/logger"
+	middleware "github.com/rizwijaya/miniWallet/infrastructures/middlewares"
 
 	database "github.com/rizwijaya/miniWallet/infrastructures/databases"
 	mcache "github.com/rizwijaya/miniWallet/infrastructures/memcache"
@@ -60,6 +61,9 @@ func initEntity(apps configLib.Routing) {
 
 	//Init Controller
 	walletController = walletCtrl.NewController(walletUsecase)
+
+	//Init Middleware
+	middleware.NewMiddleware(apps.Database)
 }
 
 func main() {

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -9,6 +10,32 @@ import (
 	"github.com/rizwijaya/miniWallet/modules/common"
 	timeLib "github.com/rizwijaya/miniWallet/pkg/time"
 )
+
+func ValidateToken(encodedToken string) (*jwt.Token, error) {
+	conf, err := config.New()
+	if err != nil {
+		return nil, err
+	}
+	token, err := jwt.Parse(encodedToken, func(token *jwt.Token) (interface{}, error) {
+		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, errors.New("invalid token")
+		}
+
+		return []byte(conf.App.Secret_key), nil
+	})
+
+	if err != nil {
+		return token, err
+	}
+
+	exp := token.Claims.(jwt.MapClaims)[common.UserSessionExpired].(float64)
+	if time.Unix(int64(exp), 0).Before(time.Now()) {
+		return token, errors.New("token is expired")
+	}
+
+	return token, nil
+}
 
 func GenerateToken(userID uuid.UUID) (string, error) {
 	config, err := config.New()
