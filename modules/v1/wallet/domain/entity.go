@@ -18,3 +18,8 @@ type Wallet struct {
 	Balance float64   `gorm:"column:balance"`
 	Status  int       `gorm:"column:status"`
 }
+
+type ChangeStatusWalletByUserID struct {
+	UserID uuid.UUID
+	Status int
+}

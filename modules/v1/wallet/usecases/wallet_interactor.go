@@ -5,7 +5,7 @@ import (
 	"github.com/rizwijaya/miniWallet/modules/common"
 	"github.com/rizwijaya/miniWallet/modules/v1/wallet/domain"
 	errorLib "github.com/rizwijaya/miniWallet/pkg/http_error"
-	token "github.com/rizwijaya/miniWallet/pkg/jwt"
+	tokenLib "github.com/rizwijaya/miniWallet/pkg/jwt"
 )
 
 func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string, error) {
@@ -33,10 +33,14 @@ func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string
 	}
 
 	// generate token
-	accessToken, err := token.GenerateToken(param.UserID)
+	accessToken, err := tokenLib.GenerateToken(param.UserID)
 	if err != nil {
 		return "", err
 	}
 
 	return accessToken, nil
+}
+
+func (wuc *walletUsecase) ChangeStatusWalletByUserID(param domain.ChangeStatusWalletByUserID) (domain.Wallet, error) {
+	return wuc.walletRepository.ChangeStatusWalletByUserID(param)
 }

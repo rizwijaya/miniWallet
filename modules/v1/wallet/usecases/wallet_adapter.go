@@ -7,6 +7,7 @@ import (
 
 type WalletUsecase interface {
 	InitMyAccount(param domain.InitMyAccountInput) (string, error)
+	ChangeStatusWalletByUserID(param domain.ChangeStatusWalletByUserID) (domain.Wallet, error)
 }
 
 type walletUsecase struct {
