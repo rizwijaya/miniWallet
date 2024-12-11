@@ -7,6 +7,6 @@ import (
 
 func Router(ctrl *walletCtrl.WalletController, api fiber.Router) {
 	{
-		api.Get("/init", ctrl.InitMyAccount)
+		api.Post("/init", ctrl.InitMyAccount)
 	}
 }

@@ -1,21 +1,18 @@
 package repository
 
 import (
-	"github.com/bradfitz/gomemcache/memcache"
-	"gorm.io/gorm"
+	"github.com/google/uuid"
+	"github.com/rizwijaya/miniWallet/modules/v1/wallet/domain"
 )
 
-type WalletRepository interface {
-}
-
-type walletRepository struct {
-	db *gorm.DB
-	mc *memcache.Client
-}
-
-func NewRepository(db *gorm.DB, mc *memcache.Client) *walletRepository {
-	return &walletRepository{
-		db: db,
-		mc: mc,
+func (wr *walletRepository) GetWalletByUserID(userID uuid.UUID) (domain.Wallet, error) {
+	var wallet domain.Wallet
+	if err := wr.db.Model(&domain.Wallet{}).Where("user_id = ?", userID).First(&wallet).Error; err != nil {
+		return domain.Wallet{}, err
 	}
+	return wallet, nil
+}
+
+func (wr *walletRepository) CreateWallet(wallet domain.Wallet) error {
+	return wr.db.Create(&wallet).Error
 }
