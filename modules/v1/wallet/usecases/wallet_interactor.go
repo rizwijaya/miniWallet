@@ -10,7 +10,7 @@ import (
 
 func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string, error) {
 	//Check user only have 1 wallet
-	wallet, err := wuc.walletRepository.GetWalletByUserID(param.UserID)
+	wallet, err := wuc.walletRepository.GetWalletByCustomerXID(param.CustomerXID)
 	if err != nil && err.Error() != errorLib.ErrRecordNotFound.Error() {
 		return "", err
 	}
@@ -21,9 +21,9 @@ func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string
 			GormModel: domain.GormModel{
 				ID: uuid.New(),
 			},
-			UserID:  param.UserID,
-			Balance: 0,
-			Status:  common.WalletStatusNonActive,
+			CustomerXID: param.CustomerXID,
+			Balance:     0,
+			Status:      common.WalletStatusNonActive,
 		}
 
 		err = wuc.walletRepository.CreateWallet(wallet)
@@ -33,7 +33,7 @@ func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string
 	}
 
 	// generate token
-	accessToken, err := tokenLib.GenerateToken(param.UserID)
+	accessToken, err := tokenLib.GenerateToken(param.CustomerXID)
 	if err != nil {
 		return "", err
 	}
@@ -41,6 +41,10 @@ func (wuc *walletUsecase) InitMyAccount(param domain.InitMyAccountInput) (string
 	return accessToken, nil
 }
 
-func (wuc *walletUsecase) ChangeStatusWalletByUserID(param domain.ChangeStatusWalletByUserID) (domain.Wallet, error) {
-	return wuc.walletRepository.ChangeStatusWalletByUserID(param)
+func (wuc *walletUsecase) ChangeStatusWalletByCustomerXID(param domain.ChangeStatusWalletByCustomerXID) (domain.Wallet, error) {
+	return wuc.walletRepository.ChangeStatusWalletByCustomerXID(param)
+}
+
+func (wuc *walletUsecase) GetWalletByCustomerXID(customerXID uuid.UUID) (domain.Wallet, error) {
+	return wuc.walletRepository.GetWalletByCustomerXID(customerXID)
 }

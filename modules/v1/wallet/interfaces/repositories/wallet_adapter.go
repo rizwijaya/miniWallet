@@ -8,9 +8,9 @@ import (
 )
 
 type WalletRepository interface {
-	GetWalletByUserID(userID uuid.UUID) (domain.Wallet, error)
+	GetWalletByCustomerXID(CustGetWalletByCustomerXID uuid.UUID) (domain.Wallet, error)
 	CreateWallet(wallet domain.Wallet) error
-	ChangeStatusWalletByUserID(param domain.ChangeStatusWalletByUserID) (domain.Wallet, error)
+	ChangeStatusWalletByCustomerXID(param domain.ChangeStatusWalletByCustomerXID) (domain.Wallet, error)
 }
 
 type walletRepository struct {

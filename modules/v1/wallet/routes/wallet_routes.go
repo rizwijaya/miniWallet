@@ -11,9 +11,14 @@ func Router(ctrl *walletCtrl.WalletController, api fiber.Router) {
 	{
 		api.Post("/init", ctrl.InitMyAccount)
 
-		//API Using Authentication
+		//API using authentication
 		api.Use(middlewareLib.Authentication())
+
+		//API authorization only wallet nonactive can access
 		api.Post("/wallet", middlewareLib.Authorization(common.WalletStatusNonActive), ctrl.EnableMyWallet)
 
+		//API authorization only wallet active can access
+		api.Use(middlewareLib.Authorization(common.WalletStatusActive))
+		api.Get("/wallet", ctrl.GetWallet)
 	}
 }

@@ -14,7 +14,7 @@ type GormModel struct {
 
 type Wallet struct {
 	GormModel
-	UserID       uuid.UUID     `gorm:"column:user_id;type:uuid;not null"`
+	CustomerXID  uuid.UUID     `gorm:"column:customer_xid;type:uuid;not null"`
 	Balance      float64       `gorm:"column:balance;type:decimal(20,2)"`
 	Status       int           `gorm:"column:status;type:int;default:0"`
 	Transactions []Transaction `gorm:"foreignKey:WalletID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` // One-to-Many

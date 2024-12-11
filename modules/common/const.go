@@ -2,8 +2,8 @@ package common
 
 const (
 	//User sessions
-	UserSessionUserID  = "userid"
-	UserSessionExpired = "expired"
+	UserSessionCustomerXID = "customerxid"
+	UserSessionExpired     = "expired"
 )
 
 const (

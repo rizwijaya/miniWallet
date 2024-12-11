@@ -23,17 +23,23 @@ func NewMiddleware(db *gorm.DB) {
 func Authorization(walletStatus int) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var wallet domain.Wallet
-		if err := database.Model(&domain.Wallet{}).Where("user_id = ?", c.Locals(common.UserSessionUserID).(uuid.UUID)).First(&wallet).Error; err != nil {
+		if err := database.Model(&domain.Wallet{}).Where("customer_xid = ?", c.Locals(common.UserSessionCustomerXID).(uuid.UUID)).First(&wallet).Error; err != nil {
 			log.Infof("[Middleware][PATH: %s][%s][IP: %s][ERROR: %s]", c.Path(), c.Method(), c.IP(), err)
 			return c.Status(fiber.StatusUnauthorized).JSON(apiResponse.CustomResponse("Unauthorized", apiResponse.HttpStatusFailed))
 		}
 
-		if wallet.Status != walletStatus {
-			log.Infof("[Middleware][PATH: %s][%s][IP: %s][ERROR: %s]", c.Path(), c.Method(), c.IP(), fmt.Sprintf("Wallet is Already %s", common.WalletStatusToString[wallet.Status]))
-			return c.Status(fiber.StatusBadRequest).JSON(apiResponse.CustomResponse(fmt.Sprintf("Already %s", common.WalletStatusToString[wallet.Status]), apiResponse.HttpStatusFailed))
+		if wallet.Status == walletStatus {
+			return c.Next()
 		}
 
-		return c.Next()
+		//Custom Response for specific PATH
+		logDesc := fmt.Sprintf("Wallet %s", common.WalletStatusToString[wallet.Status])
+		if c.Path() == "/api/v1/wallet" && c.Method() == "POST" {
+			logDesc = fmt.Sprintf("Already %s", common.WalletStatusToString[wallet.Status])
+		}
+
+		log.Infof("[Middleware][PATH: %s][%s][IP: %s][ERROR: %s]", c.Path(), c.Method(), c.IP(), logDesc)
+		return c.Status(fiber.StatusBadRequest).JSON(apiResponse.CustomResponse(logDesc, apiResponse.HttpStatusFailed))
 	}
 }
 
@@ -58,10 +64,10 @@ func Authentication() fiber.Handler {
 			log.Infof("[Middleware][PATH: %s][%s][IP: %s][ERROR: %s]", c.Path(), c.Method(), c.IP(), "Invalid token")
 			return c.Status(fiber.StatusUnauthorized).JSON(apiResponse.CustomResponse("Unauthorized", apiResponse.HttpStatusFailed))
 		}
-		userID := uuid.MustParse(token.Claims.(jwt.MapClaims)[common.UserSessionUserID].(string))
+		customerXID := uuid.MustParse(token.Claims.(jwt.MapClaims)[common.UserSessionCustomerXID].(string))
 
 		// Save userSessions to context
-		c.Locals(common.UserSessionUserID, userID)
+		c.Locals(common.UserSessionCustomerXID, customerXID)
 		return c.Next()
 	}
 }

@@ -37,14 +37,14 @@ func ValidateToken(encodedToken string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func GenerateToken(userID uuid.UUID) (string, error) {
+func GenerateToken(customerXID uuid.UUID) (string, error) {
 	config, err := config.New()
 	if err != nil {
 		return "", err
 	}
 
 	claim := jwt.MapClaims{}
-	claim[common.UserSessionUserID] = userID
+	claim[common.UserSessionCustomerXID] = customerXID
 	claim[common.UserSessionExpired] = timeLib.TimeNow().Add(time.Minute * 30).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 

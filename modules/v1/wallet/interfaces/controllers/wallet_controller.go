@@ -27,8 +27,8 @@ func (wc *WalletController) InitMyAccount(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(resp)
 	}
 
-	if req.UserID == uuid.Nil {
-		log.Errorf("[ERROR][InitMyAccount][UserIDEmpty][Missing data for required field.]")
+	if req.CustomerXID == uuid.Nil {
+		log.Errorf("[ERROR][InitMyAccount][CustomerXIDEmpty][Missing data for required field.]")
 		resp = apiResponse.CustomResponse(map[string][]string{
 			"customer_xid": {"Missing data for required field."},
 		}, apiResponse.HttpStatusFailed)
@@ -52,20 +52,20 @@ func (wc *WalletController) InitMyAccount(c *fiber.Ctx) error {
 
 func (wc *WalletController) EnableMyWallet(c *fiber.Ctx) error {
 	var (
-		resp   apiResponse.Response
-		userID = c.Locals(common.UserSessionUserID).(uuid.UUID)
+		resp        apiResponse.Response
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
 	)
 
 	defer func() {
-		log.Debugf("[INCOMING REQUEST ENABLE MY WALLET][%s][IP: %s][USERID: %s][RESP: %s]", c.Method(), c.IP(), userID, common.MustMarshal(resp))
+		log.Debugf("[INCOMING REQUEST ENABLE MY WALLET][%s][IP: %s][CUSTOMERXID: %s][RESP: %s]", c.Method(), c.IP(), customerXID, common.MustMarshal(resp))
 	}()
 
-	wallet, err := wc.walletUsecase.ChangeStatusWalletByUserID(domain.ChangeStatusWalletByUserID{
-		UserID: userID,
-		Status: common.WalletStatusActive,
+	wallet, err := wc.walletUsecase.ChangeStatusWalletByCustomerXID(domain.ChangeStatusWalletByCustomerXID{
+		CustomerXID: customerXID,
+		Status:      common.WalletStatusActive,
 	})
 	if err != nil {
-		log.Errorf("[ERROR][EnableMyWallet][uc:ChangeStatusWalletByUserID][%s]", err.Error())
+		log.Errorf("[ERROR][EnableMyWallet][uc:ChangeStatusWalletByCustomerXID][%s]", err.Error())
 		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
 		return c.Status(fiber.StatusBadRequest).JSON(resp)
 	}
@@ -75,4 +75,28 @@ func (wc *WalletController) EnableMyWallet(c *fiber.Ctx) error {
 	}, apiResponse.HttpStatusSuccess)
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
+}
+
+func (wc *WalletController) GetWallet(c *fiber.Ctx) error {
+	var (
+		resp        apiResponse.Response
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
+	)
+
+	defer func() {
+		log.Debugf("[INCOMING REQUEST GET WALLET][%s][IP: %s][CUSTOMERXID: %s][RESP: %s]", c.Method(), c.IP(), customerXID, common.MustMarshal(resp))
+	}()
+
+	wallet, err := wc.walletUsecase.GetWalletByCustomerXID(customerXID)
+	if err != nil {
+		log.Errorf("[ERROR][GetWallet][uc:GetWalletByCustomerXID][%s]", err.Error())
+		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	resp = apiResponse.CustomResponse(map[string]interface{}{
+		"wallet": constructWallet(wallet),
+	}, apiResponse.HttpStatusSuccess)
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }

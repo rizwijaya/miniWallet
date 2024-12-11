@@ -8,7 +8,7 @@ import (
 func constructWallet(wallet domain.Wallet) domain.WalletResponse {
 	return domain.WalletResponse{
 		ID:        wallet.ID,
-		OwnedBy:   wallet.UserID,
+		OwnedBy:   wallet.CustomerXID,
 		Status:    common.WalletStatusToString[wallet.Status],
 		EnabledAt: *wallet.GormModel.UpdatedAt,
 		Balance:   wallet.Balance,

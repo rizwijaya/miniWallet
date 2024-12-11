@@ -14,12 +14,12 @@ type GormModel struct {
 
 type Wallet struct {
 	GormModel
-	UserID  uuid.UUID `gorm:"column:user_id"`
-	Balance float64   `gorm:"column:balance"`
-	Status  int       `gorm:"column:status"`
+	CustomerXID uuid.UUID `gorm:"column:customer_xid"`
+	Balance     float64   `gorm:"column:balance"`
+	Status      int       `gorm:"column:status"`
 }
 
-type ChangeStatusWalletByUserID struct {
-	UserID uuid.UUID
-	Status int
+type ChangeStatusWalletByCustomerXID struct {
+	CustomerXID uuid.UUID
+	Status      int
 }
