@@ -11,7 +11,6 @@ import (
 	middleware "github.com/rizwijaya/miniWallet/infrastructures/middlewares"
 
 	database "github.com/rizwijaya/miniWallet/infrastructures/databases"
-	mcache "github.com/rizwijaya/miniWallet/infrastructures/memcache"
 	routerWalletAPIV1 "github.com/rizwijaya/miniWallet/modules/v1/wallet/routes"
 
 	walletCtrl "github.com/rizwijaya/miniWallet/modules/v1/wallet/interfaces/controllers"
@@ -30,7 +29,6 @@ func newApps(config configLib.LoadConfig) configLib.Routing {
 
 	newRoute := configLib.Routing{}
 	newRoute.Database = database.NewDatabase(config)
-	newRoute.Memcache = mcache.NewMemcache(config)
 
 	newRoute.Router = fiber.New(fiber.Config{
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
@@ -54,7 +52,7 @@ func newApps(config configLib.LoadConfig) configLib.Routing {
 
 func initEntity(apps configLib.Routing) {
 	//Init Repository
-	walletRepository := walletRepo.NewRepository(apps.Database, apps.Memcache)
+	walletRepository := walletRepo.NewRepository(apps.Database)
 
 	//Init Usecase
 	walletUsecase := walletUc.NewUsecase(walletRepository)
@@ -89,8 +87,13 @@ func main() {
 	//router apps
 	routerWalletAPIV1.Router(walletController, api)
 
+	url := config.App.Url
+	if config.App.Port != "" {
+		url = config.App.Url + ":" + config.App.Port
+	}
+
 	//listen server
-	err = apps.Router.Listen(config.App.Url + ":" + config.App.Port)
+	err = apps.Router.Listen(url)
 	if err != nil {
 		log.Fatal(err)
 	}
