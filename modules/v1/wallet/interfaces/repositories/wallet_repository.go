@@ -67,7 +67,7 @@ func (wr *walletRepository) CreateTransaction(transaction domain.Transaction) er
 
 func (wr *walletRepository) GetTransactionsByReferenceID(referenceID uuid.UUID) (domain.Transactions, error) {
 	var transactions domain.Transactions
-	if err := wr.db.Find(&transactions).Error; err != nil {
+	if err := wr.db.Where("reference_id = ?", referenceID).Find(&transactions).Error; err != nil {
 		return nil, err
 	}
 

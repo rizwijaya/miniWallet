@@ -35,7 +35,7 @@ func Authorization(walletStatus int) fiber.Handler {
 		//Custom Response for specific PATH
 		logDesc := fmt.Sprintf("Wallet %s", common.WalletStatusToString[wallet.Status])
 		codeResponse := fiber.StatusNotFound
-		if c.Path() == "/api/v1/wallet" && c.Method() == "POST" {
+		if c.Path() == "/api/v1/wallet" && (c.Method() == "POST" || c.Method() == "PATCH") {
 			logDesc = fmt.Sprintf("Already %s", common.WalletStatusToString[wallet.Status])
 			codeResponse = fiber.StatusBadRequest
 		}

@@ -47,7 +47,7 @@ func (wc *WalletController) InitMyAccount(c *fiber.Ctx) error {
 		"token": token,
 	}, apiResponse.HttpStatusSuccess)
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	return c.Status(fiber.StatusCreated).JSON(resp)
 }
 
 func (wc *WalletController) EnableMyWallet(c *fiber.Ctx) error {
