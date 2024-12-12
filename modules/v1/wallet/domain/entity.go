@@ -39,3 +39,9 @@ type Deposit struct {
 	Amount      float64
 	ReferenceID uuid.UUID
 }
+
+type Withdrawal struct {
+	WalletID    uuid.UUID
+	Amount      float64
+	ReferenceID uuid.UUID
+}

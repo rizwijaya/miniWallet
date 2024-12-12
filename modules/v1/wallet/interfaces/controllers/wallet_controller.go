@@ -71,7 +71,7 @@ func (wc *WalletController) EnableMyWallet(c *fiber.Ctx) error {
 	}
 
 	resp = apiResponse.CustomResponse(map[string]interface{}{
-		"wallet": constructWallet(wallet),
+		"wallet": constructWalletEnable(wallet),
 	}, apiResponse.HttpStatusSuccess)
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
@@ -95,7 +95,7 @@ func (wc *WalletController) GetWallet(c *fiber.Ctx) error {
 	}
 
 	resp = apiResponse.CustomResponse(map[string]interface{}{
-		"wallet": constructWallet(wallet),
+		"wallet": constructWalletEnable(wallet),
 	}, apiResponse.HttpStatusSuccess)
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -145,7 +145,7 @@ func (wc *WalletController) Deposit(c *fiber.Ctx) error {
 
 	if req.Amount <= 0 || req.ReferenceID == uuid.Nil {
 		validate := make(map[string][]string, 2)
-		if req.Amount > 0 {
+		if req.Amount <= 0 {
 			validate["amount"] = []string{"Missing data for required field."}
 		}
 
@@ -174,5 +174,84 @@ func (wc *WalletController) Deposit(c *fiber.Ctx) error {
 		"deposit": constructDeposit(transaction, customerXID),
 	}, apiResponse.HttpStatusSuccess)
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	return c.Status(fiber.StatusCreated).JSON(resp)
+}
+
+func (wc *WalletController) Withdrawal(c *fiber.Ctx) error {
+	var (
+		req         domain.WithdrawalInput
+		resp        apiResponse.Response
+		walletID    = c.Locals(common.UserSessionWalletID).(uuid.UUID)
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
+	)
+
+	defer func() {
+		log.Debugf("[INCOMING REQUEST WITHDRAWAL][%s][IP: %s][WALLETID: %s][REQ: %s][RESP: %s]", c.Method(), c.IP(), walletID, common.MustMarshal(req), common.MustMarshal(resp))
+	}()
+
+	if err := c.BodyParser(&req); err != nil {
+		log.Errorf("[ERROR][Withdrawal][BodyParser][%s]", err.Error())
+		resp = apiResponse.CustomResponse(fmt.Sprintf("Failed to parse request: %s", err.Error()), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	if req.Amount <= 0 || req.ReferenceID == uuid.Nil {
+		validate := make(map[string][]string, 2)
+		if req.Amount <= 0 {
+			validate["amount"] = []string{"Missing data for required field."}
+		}
+
+		if req.ReferenceID == uuid.Nil {
+			validate["reference_id"] = []string{"Missing data for required field."}
+		}
+
+		log.Errorf("[ERROR][Withdrawal][ValidateParam][Missing data for required field.]")
+		resp = apiResponse.CustomResponse(validate, apiResponse.HttpStatusFailed)
+
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	transaction, err := wc.walletUsecase.Withdrawal(domain.Withdrawal{
+		WalletID:    walletID,
+		Amount:      req.Amount,
+		ReferenceID: req.ReferenceID,
+	})
+	if err != nil {
+		log.Errorf("[ERROR][Withdrawal][uc:Withdrawal][%s]", err.Error())
+		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	resp = apiResponse.CustomResponse(map[string]interface{}{
+		"withdrawal": constructWithdrawal(transaction, customerXID),
+	}, apiResponse.HttpStatusSuccess)
+
+	return c.Status(fiber.StatusCreated).JSON(resp)
+}
+
+func (wc *WalletController) DisableMyWallet(c *fiber.Ctx) error {
+	var (
+		resp        apiResponse.Response
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
+	)
+
+	defer func() {
+		log.Debugf("[INCOMING REQUEST DISABLE MY WALLET][%s][IP: %s][CUSTOMERXID: %s][RESP: %s]", c.Method(), c.IP(), customerXID, common.MustMarshal(resp))
+	}()
+
+	wallet, err := wc.walletUsecase.ChangeStatusWalletByCustomerXID(domain.ChangeStatusWalletByCustomerXID{
+		CustomerXID: customerXID,
+		Status:      common.WalletStatusNonActive,
+	})
+	if err != nil {
+		log.Errorf("[ERROR][DisableMyWallet][uc:ChangeStatusWalletByCustomerXID][%s]", err.Error())
+		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	resp = apiResponse.CustomResponse(map[string]interface{}{
+		"wallet": constructWalletDisable(wallet),
+	}, apiResponse.HttpStatusSuccess)
+
+	return c.Status(fiber.StatusCreated).JSON(resp)
 }

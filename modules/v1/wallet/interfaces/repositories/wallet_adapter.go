@@ -8,7 +8,8 @@ import (
 )
 
 type WalletRepository interface {
-	GetWalletByCustomerXID(CustGetWalletByCustomerXID uuid.UUID) (domain.Wallet, error)
+	GetWalletByCustomerXID(customerXID uuid.UUID) (domain.Wallet, error)
+	GetWalletByID(walletID uuid.UUID) (domain.Wallet, error)
 	CreateWallet(wallet domain.Wallet) error
 	ChangeStatusWalletByCustomerXID(param domain.ChangeStatusWalletByCustomerXID) (domain.Wallet, error)
 	GetTransactionsByCustomerXID(customerXID uuid.UUID) (domain.Transactions, error)

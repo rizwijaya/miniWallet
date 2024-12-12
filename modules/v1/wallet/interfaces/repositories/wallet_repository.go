@@ -14,6 +14,14 @@ func (wr *walletRepository) GetWalletByCustomerXID(customerXID uuid.UUID) (domai
 	return wallet, nil
 }
 
+func (wr *walletRepository) GetWalletByID(walletID uuid.UUID) (domain.Wallet, error) {
+	var wallet domain.Wallet
+	if err := wr.db.Model(&domain.Wallet{}).Where("id = ?", walletID).First(&wallet).Error; err != nil {
+		return domain.Wallet{}, err
+	}
+	return wallet, nil
+}
+
 func (wr *walletRepository) CreateWallet(wallet domain.Wallet) error {
 	return wr.db.Create(&wallet).Error
 }

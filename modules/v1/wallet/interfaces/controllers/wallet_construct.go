@@ -6,8 +6,18 @@ import (
 	"github.com/rizwijaya/miniWallet/modules/v1/wallet/domain"
 )
 
-func constructWallet(wallet domain.Wallet) domain.WalletResponse {
-	return domain.WalletResponse{
+func constructWalletDisable(wallet domain.Wallet) domain.WalletDisableResponse {
+	return domain.WalletDisableResponse{
+		ID:         wallet.ID,
+		OwnedBy:    wallet.CustomerXID,
+		Status:     common.WalletStatusToString[wallet.Status],
+		DisabledAt: *wallet.GormModel.UpdatedAt,
+		Balance:    wallet.Balance,
+	}
+}
+
+func constructWalletEnable(wallet domain.Wallet) domain.WalletEnableResponse {
+	return domain.WalletEnableResponse{
 		ID:        wallet.ID,
 		OwnedBy:   wallet.CustomerXID,
 		Status:    common.WalletStatusToString[wallet.Status],
@@ -41,5 +51,16 @@ func constructDeposit(transaction domain.Transaction, customerXID uuid.UUID) (re
 		DepositedAt: *transaction.CreatedAt,
 		Amount:      transaction.Amount,
 		ReferenceID: transaction.ReferenceID,
+	}
+}
+
+func constructWithdrawal(transaction domain.Transaction, customerXID uuid.UUID) (resp domain.WithdrawalResponse) {
+	return domain.WithdrawalResponse{
+		ID:           transaction.ID,
+		WithdrawalBy: customerXID,
+		Status:       common.TransactionStatusToString[transaction.Status],
+		WithdrawalAt: *transaction.CreatedAt,
+		Amount:       transaction.Amount,
+		ReferenceID:  transaction.ReferenceID,
 	}
 }

@@ -13,6 +13,7 @@ func Router(ctrl *walletCtrl.WalletController, api fiber.Router) {
 
 		//API using authentication
 		api.Use(middlewareLib.Authentication())
+
 		wallet := api.Group("/wallet")
 		{
 			//API authorization only wallet nonactive can access
@@ -23,6 +24,8 @@ func Router(ctrl *walletCtrl.WalletController, api fiber.Router) {
 			wallet.Get("", ctrl.GetWallet)
 			wallet.Get("/transactions", ctrl.GetTransactions)
 			wallet.Post("/deposits", ctrl.Deposit)
+			wallet.Post("/withdrawals", ctrl.Withdrawal)
+			wallet.Patch("", ctrl.DisableMyWallet)
 		}
 	}
 }

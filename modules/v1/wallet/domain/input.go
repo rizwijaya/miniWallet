@@ -10,3 +10,8 @@ type DepositInput struct {
 	Amount      float64   `form:"amount"`
 	ReferenceID uuid.UUID `form:"reference_id"`
 }
+
+type WithdrawalInput struct {
+	Amount      float64   `form:"amount"`
+	ReferenceID uuid.UUID `form:"reference_id"`
+}

@@ -136,3 +136,88 @@ func (wuc *walletUsecase) Deposit(param domain.Deposit) (domain.Transaction, err
 
 	return transaction, nil
 }
+
+func (wuc *walletUsecase) Withdrawal(param domain.Withdrawal) (domain.Transaction, error) {
+	//Validate referenceID is unique
+	transactionReference, err := wuc.walletRepository.GetTransactionsByReferenceID(param.ReferenceID)
+	if err != nil {
+		return domain.Transaction{}, err
+	}
+	if len(transactionReference) > 0 {
+		return domain.Transaction{}, errors.New("reference_id used")
+	}
+
+	//Get Balance from wallet by WalletID
+	wallet, err := wuc.walletRepository.GetWalletByID(param.WalletID)
+	if err != nil {
+		return domain.Transaction{}, err
+	}
+
+	//Validate balance is enought
+	newBalance := wallet.Balance - param.Amount
+	if newBalance < 0 {
+		return domain.Transaction{}, errors.New("balance is insufficient")
+	}
+
+	//Get DB Transaction
+	tx := wuc.walletRepository.GetDBTx()
+	if err = tx.Error; err != nil {
+		return domain.Transaction{}, err
+	}
+
+	transaction := domain.Transaction{
+		GormModel: domain.GormModel{
+			ID: uuid.New(),
+		},
+		WalletID:    param.WalletID,
+		Type:        common.TransactionTypeWithdrawal,
+		Amount:      param.Amount,
+		ReferenceID: param.ReferenceID,
+		Status:      common.TransactionStatusProcess,
+	}
+
+	//Rollback when failed to create transaction
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			tx.Rollback()
+			//Update Transaction status to failed
+			transaction.Status = common.TransactionStatusFailed
+			log.Errorf("[ERROR][uc:Withdrawal][Rollback][%v %v]", r)
+		}
+
+		//Add Transaction
+		err = wuc.walletRepository.CreateTransaction(transaction)
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("[ERROR][uc:Withdrawal][Rollback][CreateTransaction]")
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			log.Errorf("[ERROR][uc:Withdrawal][Rollback][Commit]")
+			return
+		}
+
+		return
+	}()
+
+	//Update balance at wallet
+	err = wuc.walletRepository.UpdateWalletWithTx(tx, domain.Wallet{
+		GormModel: domain.GormModel{
+			ID: param.WalletID,
+		},
+		Balance: newBalance,
+	})
+	if err != nil {
+		transaction.Status = common.TransactionStatusFailed
+		return domain.Transaction{}, err
+	}
+
+	time := timeLib.TimeNow()
+	transaction.CreatedAt = &time
+	transaction.UpdatedAt = &time
+	transaction.Status = common.TransactionStatusSuccess
+
+	return transaction, nil
+}

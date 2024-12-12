@@ -6,12 +6,20 @@ import (
 	"github.com/google/uuid"
 )
 
-type WalletResponse struct {
+type WalletEnableResponse struct {
 	ID        uuid.UUID `json:"id"`
 	OwnedBy   uuid.UUID `json:"owned_by"`
 	Status    string    `json:"status"`
 	EnabledAt time.Time `json:"enabled_at"`
 	Balance   float64   `json:"balance"`
+}
+
+type WalletDisableResponse struct {
+	ID         uuid.UUID `json:"id"`
+	OwnedBy    uuid.UUID `json:"owned_by"`
+	Status     string    `json:"status"`
+	DisabledAt time.Time `json:"disabled_at"`
+	Balance    float64   `json:"balance"`
 }
 
 type TransactionResponse struct {
@@ -30,4 +38,13 @@ type DepositResponse struct {
 	DepositedAt time.Time `json:"deposited_at"`
 	Amount      float64   `json:"amount"`
 	ReferenceID uuid.UUID `json:"reference_id"`
+}
+
+type WithdrawalResponse struct {
+	ID           uuid.UUID `json:"id"`
+	WithdrawalBy uuid.UUID `json:"withdrawn_by"`
+	Status       string    `json:"status"`
+	WithdrawalAt time.Time `json:"withdrawn_at"`
+	Amount       float64   `json:"amount"`
+	ReferenceID  uuid.UUID `json:"reference_id"`
 }
