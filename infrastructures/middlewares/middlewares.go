@@ -34,12 +34,14 @@ func Authorization(walletStatus int) fiber.Handler {
 
 		//Custom Response for specific PATH
 		logDesc := fmt.Sprintf("Wallet %s", common.WalletStatusToString[wallet.Status])
+		codeResponse := fiber.StatusNotFound
 		if c.Path() == "/api/v1/wallet" && c.Method() == "POST" {
 			logDesc = fmt.Sprintf("Already %s", common.WalletStatusToString[wallet.Status])
+			codeResponse = fiber.StatusBadRequest
 		}
 
 		log.Infof("[Middleware][PATH: %s][%s][IP: %s][ERROR: %s]", c.Path(), c.Method(), c.IP(), logDesc)
-		return c.Status(fiber.StatusBadRequest).JSON(apiResponse.CustomResponse(logDesc, apiResponse.HttpStatusFailed))
+		return c.Status(codeResponse).JSON(apiResponse.CustomResponse(logDesc, apiResponse.HttpStatusFailed))
 	}
 }
 
@@ -65,9 +67,12 @@ func Authentication() fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(apiResponse.CustomResponse("Unauthorized", apiResponse.HttpStatusFailed))
 		}
 		customerXID := uuid.MustParse(token.Claims.(jwt.MapClaims)[common.UserSessionCustomerXID].(string))
+		walletID := uuid.MustParse(token.Claims.(jwt.MapClaims)[common.UserSessionWalletID].(string))
 
 		// Save userSessions to context
 		c.Locals(common.UserSessionCustomerXID, customerXID)
+		c.Locals(common.UserSessionWalletID, walletID)
+
 		return c.Next()
 	}
 }

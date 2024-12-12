@@ -18,8 +18,24 @@ type Wallet struct {
 	Balance     float64   `gorm:"column:balance"`
 	Status      int       `gorm:"column:status"`
 }
+type Transaction struct {
+	GormModel
+	WalletID    uuid.UUID `gorm:"column:wallet_id"`
+	Type        int       `gorm:"column:type"`
+	Amount      float64   `gorm:"column:amount"`
+	ReferenceID uuid.UUID `gorm:"column:reference_id"`
+	Status      int       `gorm:"column:status"`
+}
+
+type Transactions []Transaction
 
 type ChangeStatusWalletByCustomerXID struct {
 	CustomerXID uuid.UUID
 	Status      int
+}
+
+type Deposit struct {
+	WalletID    uuid.UUID
+	Amount      float64
+	ReferenceID uuid.UUID
 }

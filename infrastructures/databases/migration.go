@@ -22,9 +22,9 @@ type Wallet struct {
 
 type Transaction struct {
 	GormModel
-	WalletID    uuid.UUID `gorm:"column:wallet_id;type:uuid;not null;index"`
-	Type        int       `gorm:"column:type;type:int;not null"`
-	Amount      float64   `gorm:"column:amount;type:decimal(20,2);not null"`
-	ReferenceID string    `gorm:"column:reference_id;type:varchar(255);unique;not null"`
+	WalletID    uuid.UUID `gorm:"column:wallet_id"`
+	Type        int       `gorm:"column:type"`
+	Amount      float64   `gorm:"column:amount"`
+	ReferenceID uuid.UUID `gorm:"column:reference_id;type:uuid;unique;not null"`
 	Status      int       `gorm:"column:status;type:int;default:0"`
 }

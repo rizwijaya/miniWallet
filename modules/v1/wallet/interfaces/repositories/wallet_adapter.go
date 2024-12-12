@@ -11,6 +11,12 @@ type WalletRepository interface {
 	GetWalletByCustomerXID(CustGetWalletByCustomerXID uuid.UUID) (domain.Wallet, error)
 	CreateWallet(wallet domain.Wallet) error
 	ChangeStatusWalletByCustomerXID(param domain.ChangeStatusWalletByCustomerXID) (domain.Wallet, error)
+	GetTransactionsByCustomerXID(customerXID uuid.UUID) (domain.Transactions, error)
+	GetDBTx() *gorm.DB
+	GetWalletByIDWithTx(tx *gorm.DB, walletID uuid.UUID) (domain.Wallet, error)
+	UpdateWalletWithTx(tx *gorm.DB, wallet domain.Wallet) error
+	CreateTransaction(transaction domain.Transaction) error
+	GetTransactionsByReferenceID(referenceID uuid.UUID) (domain.Transactions, error)
 }
 
 type walletRepository struct {

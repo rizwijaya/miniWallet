@@ -100,3 +100,79 @@ func (wc *WalletController) GetWallet(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(resp)
 }
+
+func (wc *WalletController) GetTransactions(c *fiber.Ctx) error {
+	var (
+		resp        apiResponse.Response
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
+	)
+
+	defer func() {
+		log.Debugf("[INCOMING REQUEST GET TRANSACTIONS][%s][IP: %s][CUSTOMERXID: %s][RESP: %s]", c.Method(), c.IP(), customerXID, common.MustMarshal(resp))
+	}()
+
+	transactions, err := wc.walletUsecase.GetTransactionsByCustomerXID(customerXID)
+	if err != nil {
+		log.Errorf("[ERROR][GetTransactions][uc:GetTransactionsByCustomerXID][%s]", err.Error())
+		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	resp = apiResponse.CustomResponse(map[string]interface{}{
+		"transactions": constructTransactions(transactions),
+	}, apiResponse.HttpStatusSuccess)
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+}
+
+func (wc *WalletController) Deposit(c *fiber.Ctx) error {
+	var (
+		req         domain.DepositInput
+		resp        apiResponse.Response
+		walletID    = c.Locals(common.UserSessionWalletID).(uuid.UUID)
+		customerXID = c.Locals(common.UserSessionCustomerXID).(uuid.UUID)
+	)
+
+	defer func() {
+		log.Debugf("[INCOMING REQUEST DEPOSIT][%s][IP: %s][WALLETID: %s][REQ: %s][RESP: %s]", c.Method(), c.IP(), walletID, common.MustMarshal(req), common.MustMarshal(resp))
+	}()
+
+	if err := c.BodyParser(&req); err != nil {
+		log.Errorf("[ERROR][Deposit][BodyParser][%s]", err.Error())
+		resp = apiResponse.CustomResponse(fmt.Sprintf("Failed to parse request: %s", err.Error()), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	if req.Amount <= 0 || req.ReferenceID == uuid.Nil {
+		validate := make(map[string][]string, 2)
+		if req.Amount > 0 {
+			validate["amount"] = []string{"Missing data for required field."}
+		}
+
+		if req.ReferenceID == uuid.Nil {
+			validate["reference_id"] = []string{"Missing data for required field."}
+		}
+
+		log.Errorf("[ERROR][Deposit][ValidateParam][Missing data for required field.]")
+		resp = apiResponse.CustomResponse(validate, apiResponse.HttpStatusFailed)
+
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	transaction, err := wc.walletUsecase.Deposit(domain.Deposit{
+		WalletID:    walletID,
+		Amount:      req.Amount,
+		ReferenceID: req.ReferenceID,
+	})
+	if err != nil {
+		log.Errorf("[ERROR][Deposit][uc:Deposit][%s]", err.Error())
+		resp = apiResponse.CustomResponse(err.Error(), apiResponse.HttpStatusFailed)
+		return c.Status(fiber.StatusBadRequest).JSON(resp)
+	}
+
+	resp = apiResponse.CustomResponse(map[string]interface{}{
+		"deposit": constructDeposit(transaction, customerXID),
+	}, apiResponse.HttpStatusSuccess)
+
+	return c.Status(fiber.StatusOK).JSON(resp)
+}
